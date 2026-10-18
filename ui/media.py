@@ -21,7 +21,18 @@ PAGES = [
 ]
 BYKEY = {p[0]: p for p in PAGES}
 
-CSS = "<style>" + "".join(f".im-{k}{{background-image:url({S}/{v});}}" for k, v in IMAGES.items()) + f"""
+import base64 as _b64
+from pathlib import Path as _Path
+_STATIC = _Path(__file__).resolve().parent.parent / "static"
+
+def _uri(name):
+    """Embed the image in the CSS itself so it shows on any host (no static-file serving needed)."""
+    try:
+        return "data:image/jpeg;base64," + _b64.b64encode((_STATIC / name).read_bytes()).decode()
+    except OSError:
+        return f"{S}/{name}"   # fall back to static serving
+
+CSS = "<style>" + "".join(f".im-{k}{{background-image:url({_uri(v)});}}" for k, v in IMAGES.items()) + f"""
 /* ---------- image banner (hover = slow magnify, like a console store page) ---------- */
 .pb {{ position:relative; overflow:hidden; border-radius:18px; border:1px solid {LINE}; margin:0 0 1.2rem; min-height:150px;
   display:flex; align-items:center; box-shadow:0 12px 40px rgba(0,0,0,.35); isolation:isolate; }}
